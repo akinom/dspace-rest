@@ -1,6 +1,12 @@
 import requests
 import xml.etree.ElementTree as ET
 
+TYPE_TO_LINK = {
+    'community' : '/communities',
+    'collection' : '/collections',
+    'item' : '/items'
+}
+
 class Api:
     def __init__(self, url, rest):
         self.user_email = None
@@ -37,17 +43,22 @@ class Api:
         return ET.fromstring(r.text).iter('community')
 
     def subCommunities(self, comm):
-        return comm.iter()
+        type = comm.find('type').text
+        id = comm.find('id').text
+        r = self.get("%s/%s" % (TYPE_TO_LINK[type], id), params = {'expand' : 'subCommunities'})
+        return ET.fromstring(r.text).iter('subcommunities')
 
     def get(self, path, params=[]):
         return self.getBase(self.root + path, params)
 
     def getBase(self, path, params=[]):
         headers = { 'Accept' : 'application/xml, application/json, */*'}
+        #print(("GET: %s " % path) + str(params))
         r = requests.get(self.url + path, params=params, cookies= self.cookies, headers=headers)
         return r
 
+
     @staticmethod
     def _link(xml):
-        return xml.find('link').text
+        link =  xml.find('type').text
 
