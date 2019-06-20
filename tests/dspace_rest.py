@@ -3,8 +3,12 @@ import  dspace, dspace.rest
 import xml.etree.ElementTree as ET
 
 URL = 'https://dataspace.princeton.edu'
+URL = 'http://localhost:18083'
 REST = '/rest'
 SAMPLE_COMMUNITY_NAME = 'Princeton Plasma Physics Laboratory'
+SAMPLE_HANDLE = {'community': '88435/dsp01pz50gz45g',
+                'collection' : '88435/dsp01x920g025r',
+                'item' : '88435/dsp01765373814' }
 
 class TestDSpaceRest(unittest.TestCase):
     def setUp(self):
@@ -34,14 +38,43 @@ class TestDSpaceRest(unittest.TestCase):
         self.assertTrue(n > 0, "expected subcommunities in %s" % (SAMPLE_COMMUNITY_NAME))
 
     def test_sub_collections(self):
-        com = self.find_top_community_by_name(SAMPLE_COMMUNITY_NAME)
-        self.assertTrue(com, "can't find community community with name %s" % SAMPLE_COMMUNITY_NAME)
+        com = self.api.handle(SAMPLE_HANDLE['community'])
+        self.assertTrue(com, "can't find community community %s" % SAMPLE_HANDLE['community'])
         sub_coll = self.api.collections(com)
         n = 0
         for c in sub_coll:
             self.assertTrue(c.find('type').text == 'collection')
             n = n + 1
         self.assertTrue(n > 0, "expected collections in %s" % (SAMPLE_COMMUNITY_NAME))
+
+    def test_sub_community_on_item_collection(self):
+        for tp in ['item', 'collection']:
+            obj = self.api.handle(SAMPLE_HANDLE[tp])
+            self.assertTrue(obj)
+            sub = self.api.subCommunities(obj)
+            self.assertTrue(len(list(sub)) == 0, '%ss have no sub communities' % tp)
+
+    def test_collection_on_item(self):
+        obj = self.api.handle(SAMPLE_HANDLE['item'])
+        self.assertTrue(obj)
+        sub = self.api.collections(obj)
+        self.assertTrue(len(list(sub)) == 0, 'items have no ollections')
+
+
+    def test_existing_handles(self ):
+        for tp in SAMPLE_HANDLE.keys():
+            hdl = SAMPLE_HANDLE[tp]
+            obj = self.api.handle(hdl)
+            type = obj.find('type').text
+            self.assertTrue(type  in dspace.rest.TYPE_TO_LINK.keys(),
+                        "unexpected type value %s for handle %s" %(type, hdl));
+            self.assertTrue(type  == tp,
+                            "type value in SAMPLE_HANDLE config %s for %s does not match type of returned object (%s)" % (tp, hdl, type));
+
+
+    def test_non_existing_handle(self):
+        obj = self.api.handle("XXX/YYY")
+        self.assertTrue(obj == None)
 
     def find_top_community_by_name(self, com_name):
         tops = self.api.topCommunities()
@@ -50,6 +83,7 @@ class TestDSpaceRest(unittest.TestCase):
             if name == com_name:
                 return c
         return None
+
 
 
 if __name__ == '__main__':

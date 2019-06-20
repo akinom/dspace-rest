@@ -38,15 +38,31 @@ class Api:
                     self.user_email  = user_mail
         return self.user_email
 
+    def handle(self, hdl):
+        r = self.get("/handle/" + hdl )
+        if (r.text):
+            return ET.fromstring(r.text)
+        return None
+
     def topCommunities(self):
         r = self.get("/communities/top-communities", )
         return ET.fromstring(r.text).iter('community')
 
     def subCommunities(self, comm):
+        if (comm.tag != 'community'):
+            return iter([])
         type = comm.find('type').text
         id = comm.find('id').text
         r = self.get("%s/%s" % (TYPE_TO_LINK[type], id), params = {'expand' : 'subCommunities'})
         return ET.fromstring(r.text).iter('subcommunities')
+
+    def collections(self, comm):
+        if (comm.tag != 'community'):
+            return iter([])
+        type = comm.find('type').text
+        id = comm.find('id').text
+        r = self.get("%s/%s" % (TYPE_TO_LINK[type], id), params = {'expand' : 'collections'})
+        return ET.fromstring(r.text).iter('collections')
 
     def get(self, path, params=[]):
         return self.getBase(self.root + path, params)
@@ -56,9 +72,4 @@ class Api:
         #print(("GET: %s " % path) + str(params))
         r = requests.get(self.url + path, params=params, cookies= self.cookies, headers=headers)
         return r
-
-
-    @staticmethod
-    def _link(xml):
-        link =  xml.find('type').text
 
