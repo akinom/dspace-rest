@@ -2,7 +2,6 @@ import unittest
 import  dspace
 import xml.etree.ElementTree as ET
 
-URL = 'http://localhost:18083'
 URL = 'https://dataspace.princeton.edu'
 REST = '/rest'
 SAMPLE_COMMUNITY_NAME = 'Princeton Plasma Physics Laboratory'
