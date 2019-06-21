@@ -1,5 +1,5 @@
 import unittest
-import  dspace, dspace.rest
+import  dspace
 import xml.etree.ElementTree as ET
 
 URL = 'https://demo.dspace.org'
@@ -9,7 +9,7 @@ PWD = 'dspace'
 
 class TestDSpaceRest(unittest.TestCase):
     def setUp(self):
-        self.api = dspace.rest.Api(URL, REST)
+        self.api = dspace.Api(URL, REST)
 
     def test_login(self):
         user = self.api.login(ADMIN_EMAIL, PWD)

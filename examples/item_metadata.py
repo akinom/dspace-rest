@@ -1,10 +1,10 @@
-import dspace, dspace.rest
+import dspace
 
 URL = 'https://dataspace.princeton.edu'
 REST = '/rest'
 HANDLE =  '88435/dsp01x920g025r'
 
-API = dspace.rest.Api(URL, REST)
+API = dspace.Api(URL, REST)
 
 def get_first_metadata_value(item, field_name):
     # include metadata values
