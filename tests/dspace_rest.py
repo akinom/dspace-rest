@@ -45,7 +45,7 @@ class TestDSpaceRest(unittest.TestCase):
     def test_sub_communities(self):
         com = self.find_top_community_by_name(SAMPLE_COMMUNITY_NAME)
         self.assertTrue(com, "can't find community with name %s" % SAMPLE_COMMUNITY_NAME)
-        sub_com = self.api.subCommunities(com)
+        sub_com = self.api.communities(com)
         n = 0
         for s in sub_com:
             self.assertTrue(s.find('type').text == 'community')
@@ -56,7 +56,7 @@ class TestDSpaceRest(unittest.TestCase):
         for tp in ['item', 'collection']:
             obj = self.api.handle(SAMPLE_HANDLE[tp])
             self.assertTrue(obj)
-            sub = self.api.subCommunities(obj)
+            sub = self.api.communities(obj)
             self.assertTrue(len(list(sub)) == 0, '%ss have no sub communities' % tp)
 
     def test_collections_in_com(self):

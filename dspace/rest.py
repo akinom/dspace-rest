@@ -48,29 +48,26 @@ class Api:
         r = self.get("/communities/top-communities", )
         return ET.fromstring(r.text).iter('community')
 
-    def subCommunities(self, comm):
+    def communities(self, comm, params=[]):
         if (comm.tag != 'community'):
             return iter([])
-        type = comm.find('type').text
-        id = comm.find('id').text
-        r = self.get("%s/%s/communities" % (TYPE_TO_LINK[type], id))
-        return ET.fromstring(r.text).iter('community')
+        return self._get_iter(comm, 'community', params)
 
-    def collections(self, comm):
+    def collections(self, comm, params=[]):
         if (comm.tag != 'community'):
             return iter([])
-        type = comm.find('type').text
-        id = comm.find('id').text
-        r = self.get("%s/%s/collections" % (TYPE_TO_LINK[type], id))
-        return ET.fromstring(r.text).iter('collection')
+        return self._get_iter(comm, 'collection', params)
 
-    def items(self, comm, params = []):
-        if (comm.tag != 'collection'):
+    def items(self, coll, params = []):
+        if (coll.tag != 'collection'):
             return iter([])
-        type = comm.find('type').text
-        id = comm.find('id').text
-        r = self.get("%s/%s/items" % (TYPE_TO_LINK[type], id), params)
-        return ET.fromstring(r.text).iter('item')
+        return self._get_iter(coll, 'item', params)
+
+    def _get_iter(self, parent, child, params):
+        type = parent.find('type').text
+        id = parent.find('id').text
+        r = self.get("%s/%s%s" % (TYPE_TO_LINK[type], id, TYPE_TO_LINK[child]), params)
+        return ET.fromstring(r.text).iter(child)
 
     def get(self, path, params=[]):
         return self.getBase(self.root + path, params)
