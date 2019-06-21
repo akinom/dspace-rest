@@ -19,7 +19,7 @@ class Api:
         return self.user_email
 
     def authenticated(self):
-        r = self._get("/status")
+        r = self._get("/status", {})
         result = ET.fromstring(r.text)
         auth = result.find('authenticated')
         return auth.text.upper() == 'TRUE'
@@ -39,34 +39,36 @@ class Api:
         return self.user_email
 
     def handle(self, hdl):
-        r = self._get("/handle/" + hdl)
+        r = self._get("/handle/" + hdl, {})
         if (r.text):
             return ET.fromstring(r.text)
         return None
 
     def topCommunities(self):
-        r = self._get("/communities/top-communities", )
+        r = self._get("/communities/top-communities", {} )
         return ET.fromstring(r.text).iter('community')
 
-    def communities(self, comm, params=[]):
+    def communities(self, comm, params={}):
         if (comm.tag != 'community'):
             return iter([])
         return self._get_iter(comm, 'community', params)
 
-    def collections(self, comm, params=[]):
+    def collections(self, comm, params={}):
         if (comm.tag != 'community'):
             return iter([])
         return self._get_iter(comm, 'collection', params)
 
-    def items(self, coll, params = []):
+    def items(self, coll, params = {}):
         if (coll.tag != 'collection'):
             return iter([])
         return self._get_iter(coll, 'item', params)
 
-    def get(self, type, id, params=[]):
+    def get(self, type, id, params={}):
         return self.get_path("/%s/%s" % (TYPE_TO_PATH[type], id))
 
     def get_path(self, path, params=[]):
+        if path and path[-1] == "/":
+            path = path[:-1]
         r = self._get(path, params)
         return ET.fromstring(r.text)
 
@@ -79,7 +81,7 @@ class Api:
         path = "/%s/%s/%s" % (TYPE_TO_PATH[type], id, TYPE_TO_PATH[child])
         return DSpaceObjIter(self, path, child, params)
 
-    def _get(self, path, params=[]):
+    def _get(self, path, params):
         path = self.root + path
         headers = { 'Accept' : 'application/xml, application/json, */*'}
         print(("GET: %s " % path) + str(params))
@@ -88,11 +90,27 @@ class Api:
 
 class DSpaceObjIter:
     def __init__(self, api, path, select, params):
-        r = api._get(path, params)
-        self.itr = ET.fromstring(r.text).iter(select)
+        self.api = api
+        self.path = path
+        self.select = select
+        if not 'limit' in params:
+            params['limit'] = 100
+        if not 'offset' in params:
+            params['offset'] = 0
+        self.params = params
+        self._set_iter()
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        return next(self.itr)
+        try:
+            return next(self.itr)
+        except StopIteration as e:
+            self.params['offset'] += self.params['limit']
+            self._set_iter()
+            return next(self.itr)
+
+    def _set_iter(self):
+        r = self.api._get(self.path, self.params)
+        self.itr = ET.fromstring(r.text).iter(self.select)
