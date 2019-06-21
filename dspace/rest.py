@@ -66,8 +66,8 @@ class Api:
     def _get_iter(self, parent, child, params):
         type = parent.find('type').text
         id = parent.find('id').text
-        r = self.get("%s/%s%s" % (TYPE_TO_LINK[type], id, TYPE_TO_LINK[child]), params)
-        return ET.fromstring(r.text).iter(child)
+        path = "%s/%s%s" % (TYPE_TO_LINK[type], id, TYPE_TO_LINK[child])
+        return DSpaceObjIter(self, path, child, params)
 
     def get(self, path, params=[]):
         return self.getBase(self.root + path, params)
@@ -78,3 +78,13 @@ class Api:
         r = requests.get(self.url + path, params=params, cookies= self.cookies, headers=headers)
         return r
 
+class DSpaceObjIter:
+    def __init__(self, api, path, select, params):
+        r = api.get(path, params)
+        self.itr = ET.fromstring(r.text).iter(select)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return next(self.itr)
