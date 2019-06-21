@@ -1,5 +1,5 @@
 import unittest
-import  dspace, dspace.rest
+import  dspace
 import xml.etree.ElementTree as ET
 
 URL = 'http://localhost:18083'
@@ -12,7 +12,7 @@ SAMPLE_HANDLE = {'community': '88435/dsp01pz50gz45g',
 
 class TestDSpaceRest(unittest.TestCase):
     def setUp(self):
-        self.api = dspace.rest.Api(URL, REST)
+        self.api = dspace.Api(URL, REST)
 
     def test_get_slash(self):
         r = self.api._get("/")
@@ -102,10 +102,9 @@ class TestDSpaceRest(unittest.TestCase):
 
     def test_item_expand_metadata(self):
         obj = self.api.handle(SAMPLE_HANDLE['item'])
-        id = obj.find('id').text
-        r = self.api.get('item', id, params = { 'expand' : 'metadata'})
+        item = self.api.get_path(self.api.path(obj), params = { 'expand' : 'metadata'})
         # test that there is at least one metadata element
-        next(r.iter('metadata'))
+        next(item.iter('metadata'))
 
     def find_top_community_by_name(self, com_name):
         tops = self.api.topCommunities()
