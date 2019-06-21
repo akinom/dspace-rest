@@ -1,18 +1,15 @@
-import unittest 
-import  dspace, dspace.rest
+import unittest
+import  dspace
 import xml.etree.ElementTree as ET
 
-URL = 'https://demo.dspace.org/rest/'
+URL = 'https://demo.dspace.org'
+REST = '/rest'
 ADMIN_EMAIL  = 'dspacedemo+admin@gmail.com'
 PWD = 'dspace'
 
-class TestDSpaceRest(unittest.TestCase):
+class TestDSpaceRestLogin(unittest.TestCase):
     def setUp(self):
-        self.api = dspace.rest.Api(URL)
-
-    def test_get_slash(self):
-        r = self.api.get("/")
-        self.assertTrue(r.status_code == 200)
+        self.api = dspace.Api(URL, REST)
 
     def test_login(self):
         user = self.api.login(ADMIN_EMAIL, PWD)
