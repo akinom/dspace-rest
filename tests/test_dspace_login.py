@@ -7,7 +7,7 @@ REST = '/rest'
 ADMIN_EMAIL  = 'dspacedemo+admin@gmail.com'
 PWD = 'dspace'
 
-class TestDSpaceRest(unittest.TestCase):
+class TestDSpaceRestLogin(unittest.TestCase):
     def setUp(self):
         self.api = dspace.Api(URL, REST)
 
