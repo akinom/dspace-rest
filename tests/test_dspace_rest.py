@@ -85,7 +85,6 @@ class TestDSpaceRest(unittest.TestCase):
 
     def test_items_in_collection(self):
         obj = self.api.handle(SAMPLE_HANDLE['collection'])
-        self.assertTrue(obj, "can't find collection %s" % SAMPLE_HANDLE['collection'])
         lst = self.api.items(obj)
         n = 0
         for c in lst:
@@ -93,6 +92,13 @@ class TestDSpaceRest(unittest.TestCase):
             self.assertTrue(c.find('type').text == 'item')
             n = n + 1
         self.assertTrue(n > 0, "expected items in %s" % (SAMPLE_HANDLE['collection']))
+
+    def test_iter_inner_loop(self):
+        obj = self.api.handle(SAMPLE_HANDLE['collection'])
+        nitems100 = len(list(self.api.items(obj, params = { 'limit' : 100})))
+        self.assertTrue(nitems100 > 2 , "this is only a good test if collections has more than 2 items")
+        nitems2 = len(list(self.api.items(obj, params = { 'limit' :2})))
+        self.assertTrue(nitems2 == nitems100)
 
     def test_items_on_invalid_obj(self):
         for tp in ['item', 'community']:
