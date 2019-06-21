@@ -1,10 +1,10 @@
 import requests
 import xml.etree.ElementTree as ET
 
-TYPE_TO_LINK = {
-    'community' : '/communities',
-    'collection' : '/collections',
-    'item' : '/items'
+TYPE_TO_PATH = {
+    'community' : 'communities',
+    'collection' : 'collections',
+    'item' : 'items'
 }
 
 class Api:
@@ -19,7 +19,7 @@ class Api:
         return self.user_email
 
     def authenticated(self):
-        r = self.get("/status")
+        r = self._get("/status")
         result = ET.fromstring(r.text)
         auth = result.find('authenticated')
         return auth.text.upper() == 'TRUE'
@@ -39,13 +39,13 @@ class Api:
         return self.user_email
 
     def handle(self, hdl):
-        r = self.get("/handle/" + hdl )
+        r = self._get("/handle/" + hdl)
         if (r.text):
             return ET.fromstring(r.text)
         return None
 
     def topCommunities(self):
-        r = self.get("/communities/top-communities", )
+        r = self._get("/communities/top-communities", )
         return ET.fromstring(r.text).iter('community')
 
     def communities(self, comm, params=[]):
@@ -63,16 +63,19 @@ class Api:
             return iter([])
         return self._get_iter(coll, 'item', params)
 
+    def get(self, type, id, params=[]):
+        path = "/%s/%s" % (TYPE_TO_PATH[type], id)
+        r = self._get(path, params)
+        return ET.fromstring(r.text)
+
     def _get_iter(self, parent, child, params):
         type = parent.find('type').text
         id = parent.find('id').text
-        path = "%s/%s%s" % (TYPE_TO_LINK[type], id, TYPE_TO_LINK[child])
+        path = "/%s/%s/%s" % (TYPE_TO_PATH[type], id, TYPE_TO_PATH[child])
         return DSpaceObjIter(self, path, child, params)
 
-    def get(self, path, params=[]):
-        return self.getBase(self.root + path, params)
-
-    def getBase(self, path, params=[]):
+    def _get(self, path, params=[]):
+        path = self.root + path
         headers = { 'Accept' : 'application/xml, application/json, */*'}
         print(("GET: %s " % path) + str(params))
         r = requests.get(self.url + path, params=params, cookies= self.cookies, headers=headers)
@@ -80,7 +83,7 @@ class Api:
 
 class DSpaceObjIter:
     def __init__(self, api, path, select, params):
-        r = api.get(path, params)
+        r = api._get(path, params)
         self.itr = ET.fromstring(r.text).iter(select)
 
     def __iter__(self):

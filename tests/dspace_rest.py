@@ -1,6 +1,6 @@
 import unittest
 import  dspace, dspace.rest
-import xml.etree.ElementTree as ET
+import datetime
 
 
 URL = 'http://localhost:18083'
@@ -16,7 +16,7 @@ class TestDSpaceRest(unittest.TestCase):
         self.api = dspace.rest.Api(URL, REST)
 
     def test_get_slash(self):
-        r = self.api.get("/")
+        r = self.api._get("/")
         self.assertTrue(r.status_code == 200)
 
     def test_existing_handles(self ):
@@ -24,8 +24,8 @@ class TestDSpaceRest(unittest.TestCase):
             hdl = SAMPLE_HANDLE[tp]
             obj = self.api.handle(hdl)
             type = obj.find('type').text
-            self.assertTrue(type  in dspace.rest.TYPE_TO_LINK.keys(),
-                            "unexpected type value %s for handle %s" %(type, hdl));
+            self.assertTrue(type in dspace.rest.TYPE_TO_PATH.keys(),
+                            "unexpected type value %s for handle %s" % (type, hdl));
             self.assertTrue(type  == tp,
                             "type value in SAMPLE_HANDLE config %s for %s does not match type of returned object (%s)" % (tp, hdl, type));
 
@@ -84,8 +84,15 @@ class TestDSpaceRest(unittest.TestCase):
         n = 0
         for c in lst:
             self.assertTrue(c.find('type').text == 'item')
+            self.assertTrue(c.find('type').text == 'item')
             n = n + 1
         self.assertTrue(n > 0, "expected items in %s" % (SAMPLE_HANDLE['collection']))
+
+    def test_item_expand_metadata(self):
+        obj = self.api.handle(SAMPLE_HANDLE['item'])
+        id = obj.find('id').text
+        r = self.api.get('item', id, params = { 'expand' : 'metadata'})
+        next(r.iter('metadata'))
 
     def find_top_community_by_name(self, com_name):
         tops = self.api.topCommunities()
