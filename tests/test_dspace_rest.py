@@ -15,7 +15,8 @@ class TestDSpaceRest(unittest.TestCase):
         self.api = dspace.Api(URL, REST)
 
     def test_get_slash(self):
-        r = self.api._get("/")
+        """ this does not come back with xml """
+        r = self.api._get("/", {})
         self.assertTrue(r.status_code == 200)
 
     def test_existing_handles(self ):
