@@ -1,7 +1,6 @@
 import unittest
 import  dspace, dspace.rest
-import datetime
-
+import xml.etree.ElementTree as ET
 
 URL = 'http://localhost:18083'
 URL = 'https://dataspace.princeton.edu'
@@ -34,6 +33,12 @@ class TestDSpaceRest(unittest.TestCase):
         obj = self.api.handle("XXX/YYY")
         self.assertTrue(obj == None)
 
+    def test_path(self):
+        for tp in SAMPLE_HANDLE.keys():
+            obj = self.api.handle(SAMPLE_HANDLE[tp])
+            same = self.api.get_path(self.api.path(obj))
+            self.assertTrue(ET.tostring(obj) == ET.tostring(same))
+
     def test_top_communities(self):
         tops = self.api.topCommunities()
         found_community_with_SAMPLE_NAME = False
@@ -53,7 +58,7 @@ class TestDSpaceRest(unittest.TestCase):
             n = n + 1
         self.assertTrue(n > 0, "expected subcommunities in %s" % (SAMPLE_COMMUNITY_NAME))
 
-    def test_sub_community_on_collection_item(self):
+    def test_sub_community_on_invalid_obj(self):
         for tp in ['item', 'collection']:
             obj = self.api.handle(SAMPLE_HANDLE[tp])
             self.assertTrue(obj)
@@ -70,7 +75,7 @@ class TestDSpaceRest(unittest.TestCase):
             n = n + 1
         self.assertTrue(n > 0, "expected collections in %s" % (SAMPLE_COMMUNITY_NAME))
 
-    def test_collection_on_collection_item(self):
+    def test_collection_on_invalid_obj(self):
         for tp in ['item', 'collection']:
             obj = self.api.handle(SAMPLE_HANDLE[tp])
             self.assertTrue(obj)
@@ -88,10 +93,18 @@ class TestDSpaceRest(unittest.TestCase):
             n = n + 1
         self.assertTrue(n > 0, "expected items in %s" % (SAMPLE_HANDLE['collection']))
 
+    def test_items_on_invalid_obj(self):
+        for tp in ['item', 'community']:
+            obj = self.api.handle(SAMPLE_HANDLE[tp])
+            self.assertTrue(obj)
+            lst = self.api.items(obj)
+            self.assertTrue(len(list(lst)) == 0, '%ss have no items' % tp)
+
     def test_item_expand_metadata(self):
         obj = self.api.handle(SAMPLE_HANDLE['item'])
         id = obj.find('id').text
         r = self.api.get('item', id, params = { 'expand' : 'metadata'})
+        # test that there is at least one metadata element
         next(r.iter('metadata'))
 
     def find_top_community_by_name(self, com_name):

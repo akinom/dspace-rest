@@ -64,9 +64,14 @@ class Api:
         return self._get_iter(coll, 'item', params)
 
     def get(self, type, id, params=[]):
-        path = "/%s/%s" % (TYPE_TO_PATH[type], id)
+        return self.get_path("/%s/%s" % (TYPE_TO_PATH[type], id))
+
+    def get_path(self, path, params=[]):
         r = self._get(path, params)
         return ET.fromstring(r.text)
+
+    def path(self, obj):
+        return "/%s/%s"  % (TYPE_TO_PATH[obj.find('type').text], obj.find('id').text)
 
     def _get_iter(self, parent, child, params):
         type = parent.find('type').text
