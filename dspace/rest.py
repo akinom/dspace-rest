@@ -53,23 +53,31 @@ class Api:
             return iter([])
         type = comm.find('type').text
         id = comm.find('id').text
-        r = self.get("%s/%s" % (TYPE_TO_LINK[type], id), params = {'expand' : 'subCommunities'})
-        return ET.fromstring(r.text).iter('subcommunities')
+        r = self.get("%s/%s/communities" % (TYPE_TO_LINK[type], id))
+        return ET.fromstring(r.text).iter('community')
 
     def collections(self, comm):
         if (comm.tag != 'community'):
             return iter([])
         type = comm.find('type').text
         id = comm.find('id').text
-        r = self.get("%s/%s" % (TYPE_TO_LINK[type], id), params = {'expand' : 'collections'})
-        return ET.fromstring(r.text).iter('collections')
+        r = self.get("%s/%s/collections" % (TYPE_TO_LINK[type], id))
+        return ET.fromstring(r.text).iter('collection')
+
+    def items(self, comm, params = []):
+        if (comm.tag != 'collection'):
+            return iter([])
+        type = comm.find('type').text
+        id = comm.find('id').text
+        r = self.get("%s/%s/items" % (TYPE_TO_LINK[type], id), params)
+        return ET.fromstring(r.text).iter('item')
 
     def get(self, path, params=[]):
         return self.getBase(self.root + path, params)
 
     def getBase(self, path, params=[]):
         headers = { 'Accept' : 'application/xml, application/json, */*'}
-        #print(("GET: %s " % path) + str(params))
+        print(("GET: %s " % path) + str(params))
         r = requests.get(self.url + path, params=params, cookies= self.cookies, headers=headers)
         return r
 
