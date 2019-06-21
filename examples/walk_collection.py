@@ -6,11 +6,16 @@ HANDLE =  '88435/dsp01x920g025r'
 
 API = dspace.rest.Api(URL, REST)
 
-def list_items_in_collection(api, col_handle):
-    obj = api.handle(col_handle)
-    for item in api.items(obj):
-        props = [item.find('type').text , item.find('handle').text ,
-                 item.find('lastModified').text, item.find('name').text]
-        print("\t".join(props))
+def list_items(api, items):
+    props =['type', 'handle', 'lastModified', 'name']
+    print("#" + "\t".join(props))
 
-list_items_in_collection(API, HANDLE)
+    for item in items:
+        vals = []
+        for p in props:
+            vals.append(item.find(p).text)
+        print("\t".join(vals))
+    print("#" + "\t".join(props))
+
+col = API.handle(HANDLE)
+list_items(API, API.items(col))
