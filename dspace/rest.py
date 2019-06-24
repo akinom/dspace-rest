@@ -19,7 +19,7 @@ class Api:
         return self.user_email
 
     def authenticated(self):
-        r = self._get("/status", {})
+        r = self._get("/%s/status" % self.root, {})
         result = ET.fromstring(r.text)
         auth = result.find('authenticated')
         return auth.text.upper() == 'TRUE'
@@ -39,14 +39,16 @@ class Api:
         return self.user_email
 
     def handle(self, hdl):
-        r = self._get("/handle/" + hdl, {})
-        if (r.text):
+        r = self._get("/%s/handle/%s" %( self.root, hdl), {})
+        if r.status_code == 200:
             return ET.fromstring(r.text)
         return None
 
     def topCommunities(self):
-        r = self._get("/communities/top-communities", {} )
-        return ET.fromstring(r.text).iter('community')
+        r = self._get("/%s/communities/top-communities" % (self.root), {} )
+        if r.status_code == 200:
+            return ET.fromstring(r.text).iter('community')
+        return iter([])
 
     def communities(self, comm, params={}):
         if (comm.tag != 'community'):
@@ -63,28 +65,30 @@ class Api:
             return iter([])
         return self._get_iter(coll, 'item', params)
 
-    def get(self, type, id, params={}):
-        return self.get_path("/%s/%s" % (TYPE_TO_PATH[type], id))
-
     def get_path(self, path, params=[]):
         if path and path[-1] == "/":
             path = path[:-1]
-        r = self._get(path, params)
-        return ET.fromstring(r.text)
+        r = self._get("%s" %  path, params)
+        if (r.status_code == 200):
+            return ET.fromstring(r.text)
+        return None
 
     def path(self, obj):
-        return "/%s/%s"  % (TYPE_TO_PATH[obj.find('type').text], obj.find('id').text)
+        pth = ''
+        if obj.find('link') != None:
+            pth =  obj.find('link').text
+        else:
+            pth = "/%s/%s/%s"  % (self.root, TYPE_TO_PATH[obj.find('type').text], obj.find('id').text)
+        return pth
 
     def _get_iter(self, parent, child, params):
-        type = parent.find('type').text
-        id = parent.find('id').text
-        path = "/%s/%s/%s" % (TYPE_TO_PATH[type], id, TYPE_TO_PATH[child])
+        pth = self.path(parent)
+        path = "%s/%s" % (pth, TYPE_TO_PATH[child])
         return DSpaceObjIter(self, path, child, params)
 
     def _get(self, path, params):
-        path = self.root + path
         headers = { 'Accept' : 'application/xml, application/json, */*'}
-        print(("GET: %s " % path) + str(params))
+        print("GET: %s%s\t%s" % (self.url, path, str(params)))
         r = requests.get(self.url + path, params=params, cookies= self.cookies, headers=headers)
         return r
 
