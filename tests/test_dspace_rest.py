@@ -88,7 +88,6 @@ class TestDSpaceRest(unittest.TestCase):
         n = 0
         for c in lst:
             self.assertTrue(c.find('type').text == 'item')
-            self.assertTrue(c.find('type').text == 'item')
             n = n + 1
         self.assertTrue(n > 0, "expected items in %s" % (SAMPLE_HANDLE['collection']))
 
